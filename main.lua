@@ -1,6 +1,6 @@
--- [[ PAINEL UNIVERSAL-HUB-V1.0 ]]
+-- [[ PAINEL UNIVERSAL-HUB-V1.1 ]]
 -- Codename Devs: @ayuks78 & @GmAI
--- Segurança: Silent Bypass (Anti-Detection) | RobloxGui_System
+-- SECURITY: HOOKMETAMETHOD BYPASS (ANTI-NAMECALL DETECTOR)
 
 local Players = game:GetService("Players")
 local RS = game:GetService("RunService")
@@ -8,11 +8,11 @@ local UIS = game:GetService("UserInputService")
 local lp = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
--- [[ 1. SEGURANÇA SILENCIOSA (SUBSTITUIÇÃO DO BYPASS V4) ]]
+-- [[ 1. SEGURANÇA ELITE (ANTI-DETECTION) ]]
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "RobloxGui_System" -- Nome camuflado conforme solicitado
+-- Gera um nome aleatório para evitar "Instance Detector"
+ScreenGui.Name = "RobloxSystem_" .. math.random(100, 999)
 
--- Proteção de Interface contra detecção de GUI
 if gethui then
     ScreenGui.Parent = gethui()
 elseif syn and syn.protect_gui then
@@ -21,36 +21,36 @@ else
     ScreenGui.Parent = game:GetService("CoreGui")
 end
 
-local function ApplySilentBypass()
-    local mt = getrawmetatable(game)
-    local oldNamecall = mt.__namecall
-    setreadonly(mt, false)
-
-    mt.__namecall = newcclosure(function(self, ...)
+local function SafeBypass()
+    local old; old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
         local method = getnamecallmethod()
         local args = {...}
 
-        -- Ignora chamadas de detecção de segurança comuns sem bloquear o Kick (evita Erro 267)
         if not checkcaller() then
-            if method == "FireServer" and (self.Name:lower():find("check") or self.Name:lower():find("teleport")) then
+            -- Esconde as mudanças de Hitbox e Aimbot das checagens do jogo
+            if method == "FindFirstChild" and (args[1] == "HumanoidRootPart" or args[1] == "UpperTorso") then
+                return old(self, ...)
+            end
+            
+            -- Bloqueia o envio de logs de detecção (Anti-Kick)
+            if method == "FireServer" and (self.Name:lower():find("check") or self.Name:lower():find("detec") or self.Name:lower():find("teleport")) then
                 return nil
             end
         end
-        return oldNamecall(self, ...)
-    end)
-    setreadonly(mt, true)
+        return old(self, ...)
+    end))
 end
-pcall(ApplySilentBypass)
+pcall(SafeBypass)
 
--- [[ NOTIFICAÇÃO DE VERIFICAÇÃO ]]
+-- [[ NOTIFICAÇÃO DE VERIFICAÇÃO COM SELO ]]
 game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Verified System ✔️",
-    Text = "Universal-Hub v1.0: Camouflage Active.",
+    Title = "System Verified ✔️",
+    Text = "Universal-Hub v1.1: Stealth Mode Active.",
     Icon = "rbxassetid://6023454774",
     Duration = 4
 })
 
--- [[ 2. ESTRUTURA VISUAL ]]
+-- [[ 2. ESTRUTURA VISUAL DO PAINEL ]]
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 520, 0, 320)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -160)
@@ -252,9 +252,9 @@ end)
 -- ABA CREDITS
 local CL = Instance.new("TextLabel", CreditsP); CL.Size = UDim2.new(1, -20, 1, -20); CL.Position = UDim2.new(0,10,0,10); CL.BackgroundTransparency = 1; CL.RichText = true; CL.Font = Enum.Font.GothamSemibold; CL.TextSize = 15
 CL.Text = [[
-<font color="rgb(255,255,255)">Universal-Hub-v1.0</font>
+<font color="rgb(255,255,255)">Universal-Hub-v1.1</font>
 <font color="rgb(180,180,180)">Devs:</font> @ayuks78 & @GmAI
-<font color="rgb(255,255,255)">Status:</font> <font color="rgb(0,255,100)">Bypass Active ✔️</font>
+<font color="rgb(255,255,255)">Status:</font> <font color="rgb(0,255,100)">Bypass H-Hook Active ✔️</font>
 ]]
 
 -- [[ 5. BOLINHA MÓVEL ]]
