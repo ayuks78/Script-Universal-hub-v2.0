@@ -1,132 +1,182 @@
--- [[ UNIVERSAL-HUB v2.3 - NEURAL GHOST ]]
+-- [[ UNIVERSAL-HUB v2.4 - FINAL STRIKE ]]
 -- @ayuks78 & @GmAI
--- Security: Lvl 10 - Memory Obfuscation & Dynamic Property Spoofing
-
--- Proteção Profissional: Localiza o ambiente antes de qualquer coisa
-local _G = getgenv and getgenv() or _G
-local _PROTECT = {
-    Config = {
-        Aimbot = false,
-        Hitbox = false,
-        HitSize = 12,
-        Esp = false,
-        Noclip = false,
-        Boost = false
-    }
-}
-_G.NeuralConfig = _PROTECT.Config
+-- Design: Black/White/Blue RGB | Animation: Central Fade
 
 local Players = game:GetService("Players")
 local RS = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
+local TS = game:GetService("TweenService")
 local lp = Players.LocalPlayer
+local mouse = lp:GetMouse()
 local camera = workspace.CurrentCamera
 
--- [[ O PORTEIRO INVISÍVEL: PROTEÇÃO ANTI-DETECTION ]]
--- Em vez de hookmetamethod (que é detectável), usamos um proxy de função
-local function SafePropertySet(part, prop, value)
-    local s, e = pcall(function()
-        -- O segredo profissional: Alterar e mascarar na mesma thread
-        part[prop] = value
-    end)
-    return s
-end
+-- [[ CONFIGURAÇÃO ]]
+getgenv().Config = {
+    Aimbot = false,
+    Hitbox = false,
+    HitSize = 15,
+    Esp = false,
+    Noclip = false,
+    Boost = false,
+    FovSize = 150,
+    Smoothness = 0.15 -- Mediano (0.1 suave, 0.5 forte)
+}
 
--- [[ INTERFACE PROFISSIONAL (400+ LINHAS DE ESTRUTURA REFORÇADA) ]]
-local UI = Instance.new("ScreenGui")
-UI.Name = game:GetService("HttpService"):GenerateGUID(false) -- Nome Aleatório para evitar o "GUI Detector"
-UI.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+-- [[ SISTEMA DE FOV ]]
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1
+FOVCircle.Color = Color3.fromRGB(0, 150, 255)
+FOVCircle.Transparency = 0.5
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+
+-- [[ INTERFACE ]]
+local UI = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
+UI.Name = "Universal_v24"
 
 local Main = Instance.new("Frame", UI)
-Main.Size = UDim2.new(0, 580, 0, 320); Main.Position = UDim2.new(0.5, 0, 0.5, 0); Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.BackgroundColor3 = Color3.fromRGB(7, 7, 9); Main.BorderSizePixel = 0; Main.Visible = false
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 5)
-Instance.new("UIStroke", Main).Color = Color3.fromRGB(30, 30, 35)
+Main.Size = UDim2.new(0, 0, 0, 0) -- Inicia em 0 para animação
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+Main.ClipsDescendants = true
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
 
--- Sidebar & Content Separados (Analogia do Escritório)
+-- Barra RGB Azul em baixo
+local RGBBar = Instance.new("Frame", Main)
+RGBBar.Size = UDim2.new(1, 0, 0, 3)
+RGBBar.Position = UDim2.new(0, 0, 1, -3)
+RGBBar.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+RGBBar.BorderSizePixel = 0
+
+-- Efeito Pulsante Azul
+task.spawn(function()
+    while task.wait() do
+        for i = 0, 1, 0.01 do
+            RGBBar.BackgroundColor3 = Color3.fromHSV(0.6, 0.8, 0.5 + (math.sin(tick()*2)*0.5))
+            task.wait()
+        end
+    end
+end)
+
+-- Sidebar (Escritório)
 local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 145, 1, -20); Sidebar.Position = UDim2.new(0, 10, 0, 10); Sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
-Instance.new("UICorner", Sidebar)
+Sidebar.Size = UDim2.new(0, 140, 1, -20); Sidebar.Position = UDim2.new(0, 10, 0, 10); Sidebar.BackgroundTransparency = 1
 
 local Container = Instance.new("Frame", Main)
-Container.Size = UDim2.new(1, -170, 1, -30); Container.Position = UDim2.new(0, 160, 0, 15); Container.BackgroundTransparency = 1
+Container.Size = UDim2.new(1, -170, 1, -40); Container.Position = UDim2.new(0, 160, 0, 15); Container.BackgroundTransparency = 1
 
+-- [[ SISTEMA DE ABAS ]]
 local Tabs = {}
 function CreateTab(name)
     local P = Instance.new("ScrollingFrame", Container)
     P.Size = UDim2.new(1, 0, 1, 0); P.Visible = false; P.BackgroundTransparency = 1; P.ScrollBarThickness = 0
-    Instance.new("UIListLayout", P).Padding = UDim.new(0, 7)
+    Instance.new("UIListLayout", P).Padding = UDim.new(0, 8)
     
     local B = Instance.new("TextButton", Sidebar)
-    B.Size = UDim2.new(1, -10, 0, 32); B.Position = UDim2.new(0, 5, 0, (#Tabs * 37) + 60)
-    B.Text = name; B.BackgroundColor3 = Color3.fromRGB(15, 15, 18); B.TextColor3 = Color3.fromRGB(150, 150, 150); B.Font = "GothamBold"; B.TextSize = 10; Instance.new("UICorner", B)
+    B.Size = UDim2.new(1, 0, 0, 32); B.Text = name; B.BackgroundColor3 = Color3.fromRGB(15, 15, 20); B.TextColor3 = Color3.fromRGB(255, 255, 255); B.Font = "GothamBold"; B.TextSize = 10; Instance.new("UICorner", B)
     
     B.MouseButton1Click:Connect(function()
-        for _, v in pairs(Tabs) do v.P.Visible = false; v.B.TextColor3 = Color3.fromRGB(150, 150, 150) end
-        P.Visible = true; B.TextColor3 = Color3.fromRGB(65, 120, 255)
+        for _, v in pairs(Tabs) do v.P.Visible = false; v.B.BackgroundColor3 = Color3.fromRGB(15, 15, 20) end
+        P.Visible = true; B.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
     end)
-    Tabs[#Tabs + 1] = {P = P, B = B, Name = name}
+    Tabs[#Tabs+1] = {P = P, B = B}
     return P
 end
 
--- [ COMPONENTES DE ELITE ]
-local function AddToggle(parent, text, key)
-    local f = Instance.new("Frame", parent); f.Size = UDim2.new(1, -10, 0, 42); f.BackgroundColor3 = Color3.fromRGB(13, 13, 16); Instance.new("UICorner", f)
-    local l = Instance.new("TextLabel", f); l.Size = UDim2.new(1, 0, 1, 0); l.Position = UDim2.new(0, 12, 0, 0); l.Text = text; l.TextColor3 = Color3.fromRGB(200, 200, 200); l.TextXAlignment = 0; l.BackgroundTransparency = 1; l.Font = "GothamSemibold"; l.TextSize = 11
-    local b = Instance.new("TextButton", f); b.Size = UDim2.new(0, 35, 0, 18); b.Position = UDim2.new(1, -45, 0.5, -9); b.BackgroundColor3 = Color3.fromRGB(25, 25, 30); b.Text = ""; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 9)
+-- Componentes
+function AddToggle(parent, text, key)
+    local f = Instance.new("Frame", parent); f.Size = UDim2.new(1, -10, 0, 40); f.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Instance.new("UICorner", f)
+    local l = Instance.new("TextLabel", f); l.Size = UDim2.new(1, 0, 1, 0); l.Position = UDim2.new(0, 12, 0, 0); l.Text = text; l.TextColor3 = Color3.fromRGB(255, 255, 255); l.TextXAlignment = 0; l.BackgroundTransparency = 1; l.Font = "GothamBold"; l.TextSize = 11
+    local b = Instance.new("TextButton", f); b.Size = UDim2.new(0, 35, 0, 18); b.Position = UDim2.new(1, -45, 0.5, -9); b.BackgroundColor3 = Color3.fromRGB(40, 40, 40); b.Text = ""; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
     
     b.MouseButton1Click:Connect(function()
-        _G.NeuralConfig[key] = not _G.NeuralConfig[key]
-        game:GetService("TweenService"):Create(b, TweenInfo.new(0.3), {BackgroundColor3 = _G.NeuralConfig[key] and Color3.fromRGB(65, 120, 255) or Color3.fromRGB(25, 25, 30)}):Play()
+        getgenv().Config[key] = not getgenv().Config[key]
+        TS:Create(b, TweenInfo.new(0.3), {BackgroundColor3 = getgenv().Config[key] and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)}):Play()
+        if key == "Aimbot" then FOVCircle.Visible = getgenv().Config[key] end
     end)
 end
 
--- [ CRIAÇÃO DAS ABAS ]
-local MainTab = CreateTab("Main")
-local VisualTab = CreateTab("Visual")
-local MiscTab = CreateTab("Misc")
-local CreditsTab = CreateTab("Créditos")
+-- Criar Abas
+local MainT = CreateTab("Main")
+local VisualT = CreateTab("Visual")
+local MiscT = CreateTab("Misc")
 
-AddToggle(MainTab, "Aimbot Intelligent", "Aimbot")
-AddToggle(MainTab, "Hitbox Neural (Safe)", "Hitbox")
-AddToggle(VisualTab, "ESP Master", "Esp")
-AddToggle(MiscTab, "Noclip Stealth", "Noclip")
-AddToggle(MiscTab, "Fast Performance", "Boost")
+AddToggle(MainT, "Aimbot Magnetic (Smooth)", "Aimbot")
+AddToggle(MainT, "Hitbox Physical", "Hitbox")
+AddToggle(VisualT, "ESP Name/Health/Dist", "Esp")
+AddToggle(MiscT, "Noclip Ghost", "Noclip")
+AddToggle(MiscT, "Potato Mode (FPS)", "Boost")
 
--- [[ MOTOR DE ALTA PERFORMANCE E SEGURANÇA ]]
-RS.Heartbeat:Connect(function()
-    -- Hitbox Pro: Não aumenta a peça inimiga se o jogo estiver checando (Raycast Check)
-    if _G.NeuralConfig.Hitbox then
+-- [[ FUNÇÕES LÓGICAS (CORRIGIDAS) ]]
+
+-- Aimbot Magnético
+local function GetClosest()
+    local target, closest = nil, getgenv().Config.FovSize
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= lp and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            local pos, onScreen = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+            if onScreen then
+                local mag = (Vector2.new(pos.X, pos.Y) - UIS:GetMouseLocation()).Magnitude
+                if mag < closest then target = v; closest = mag end
+            end
+        end
+    end
+    return target
+end
+
+RS.RenderStepped:Connect(function()
+    FOVCircle.Position = UIS:GetMouseLocation()
+    FOVCircle.Radius = getgenv().Config.FovSize
+    
+    if getgenv().Config.Aimbot and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local target = GetClosest()
+        if target then
+            local targetPos = camera:WorldToViewportPoint(target.Character.HumanoidRootPart.Position)
+            local mousePos = UIS:GetMouseLocation()
+            -- Interpolação para suavidade mediana
+            local finalPos = Vector2.new(
+                (targetPos.X - mousePos.X) * getgenv().Config.Smoothness,
+                (targetPos.Y - mousePos.Y) * getgenv().Config.Smoothness
+            )
+            mousemoverel(finalPos.X, finalPos.Y)
+        end
+    end
+    
+    -- Hitbox Proativa
+    if getgenv().Config.Hitbox then
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = v.Character.HumanoidRootPart
-                -- Só altera se o jogador estiver visível, evitando telemetria do servidor
-                local _, onScreen = camera:WorldToViewportPoint(hrp.Position)
-                if onScreen then
-                    SafePropertySet(hrp, "Size", Vector3.new(_G.NeuralConfig.HitSize, _G.NeuralConfig.HitSize, _G.NeuralConfig.HitSize))
-                    SafePropertySet(hrp, "Transparency", 0.7)
-                    SafePropertySet(hrp, "CanCollide", false)
-                else
-                    -- Reseta o tamanho quando fora de tela para enganar detectores de distância
-                    SafePropertySet(hrp, "Size", Vector3.new(2, 2, 1))
-                end
+                v.Character.HumanoidRootPart.Size = Vector3.new(getgenv().Config.HitSize, getgenv().Config.HitSize, getgenv().Config.HitSize)
+                v.Character.HumanoidRootPart.CanCollide = false
+                v.Character.HumanoidRootPart.Transparency = 0.8
             end
         end
     end
 end)
 
--- Noclip Thread (Stealth)
-RS.Stepped:Connect(function()
-    if _G.NeuralConfig.Noclip and lp.Character then
-        for _, v in pairs(lp.Character:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
+-- Boost FPS Real
+task.spawn(function()
+    while task.wait(2) do
+        if getgenv().Config.Boost then
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("Texture") or v:IsA("Decal") then v:Destroy() end
+                if v:IsA("PostProcessEffect") or v:IsA("Atmosphere") then v:Destroy() end
+            end
+            settings().Rendering.QualityLevel = 1
         end
     end
 end)
 
--- Botão de Ativação Profissional
-local TBtn = Instance.new("ImageButton", UI); TBtn.Size = UDim2.new(0, 45, 0, 45); TBtn.Position = UDim2.new(0, 10, 0.5, 0); TBtn.Image = "rbxassetid://6023454774"; TBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 12); Instance.new("UICorner", TBtn); Instance.new("UIStroke", TBtn).Color = Color3.fromRGB(65, 120, 255)
-TBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+-- [[ ANIMAÇÃO DE ABERTURA ]]
+Main.Visible = true
+TS:Create(Main, TweenInfo.new(0.8, Enum.EasingStyle.Back), {Size = UDim2.new(0, 580, 0, 320)}):Play()
+
+-- Botão de Minimizar (Lado)
+local OpenBtn = Instance.new("ImageButton", UI)
+OpenBtn.Size = UDim2.new(0, 45, 0, 45); OpenBtn.Position = UDim2.new(0, 10, 0.5, -22); OpenBtn.Image = "rbxassetid://6023454774"; OpenBtn.BackgroundColor3 = Color3.fromRGB(5, 5, 5); Instance.new("UICorner", OpenBtn); Instance.new("UIStroke", OpenBtn).Color = Color3.fromRGB(0, 120, 255)
+OpenBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
 
 Tabs[1].P.Visible = true
-print("[@GmAI]: Neural Ghost Protocol v2.3 Initialized.")
+print("Universal Hub v2.4 Loaded.")
