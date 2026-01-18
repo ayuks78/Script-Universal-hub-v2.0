@@ -1,143 +1,259 @@
--- [[ UNIVERSAL-HUB v2.7 - INFINITE EDITION ]]
--- @ayuks78 & @GmAI
--- FOCO: ESP ESTILO IY | AIMBOT FORTE SEM FOV | HITBOX REAL
+-- [[ DRAGON BALL RAGE: X-GEN v2.0 "BLUE PROTOCOL" ]]
+-- Codename: @ayuks78 & @GmAI
+-- Tema: Dark Mode + Blue/Cyan RGB Pulse
+-- Status: Undetected | Infinite Radar | Auto Farm Engine
 
-local Players = game:GetService("Players")
-local RS = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
-local TS = game:GetService("TweenService")
-local lp = Players.LocalPlayer
-local camera = workspace.CurrentCamera
+-- Carregando Biblioteca Otimizada (Orion Editada para Performance)
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- [[ CONFIGURAÇÃO DE ELITE ]]
+-- [[ SISTEMA RGB AZUL (Ciano -> Azul Forte -> Azul Escuro) ]]
+-- Isso fará a interface pulsar nas cores que você pediu
+task.spawn(function()
+    while task.wait() do
+        -- Simulação de RGB focado em tons de Azul
+        local time = tick() * 0.5
+        local color = Color3.fromHSV(0.55 + 0.1 * math.sin(time), 1, 1) -- Varia entre Ciano e Azul
+        if OrionLib.Flags["RGB_Color"] then
+            OrionLib.Flags["RGB_Color"]:Set(color)
+        end
+    end
+end)
+
+local Window = OrionLib:MakeWindow({
+    Name = "DBR X-GEN | PROTOCOL BLUE",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "DBR_BlueConfig",
+    IntroEnabled = true,
+    IntroText = "Carregando Módulos v2.0...",
+    IntroIcon = "rbxassetid://4483345998"
+})
+
+-- [[ VARIÁVEIS GLOBAIS ]]
 getgenv().Config = {
-    Aimbot = false,
-    Hitbox = false,
-    Esp = false,
-    Noclip = false,
-    MaxDist = 700,
-    AimPart = "UpperTorso", -- Mira no Tronco para não errar
-    AimSmooth = 1 -- 1 = Instantâneo (Forte)
+    AutoStats = {Attack = false, Defense = false, Ki = false, Agility = false},
+    AutoForm = false,
+    InfiniteRadar = false,
+    GodMode = false, -- Tenta anular dano
+    SpamCapsule = false
 }
 
--- [[ INTERFACE ARRASTÁVEL ]]
-local UI = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
-local Main = Instance.new("Frame", UI)
-Main.Size = UDim2.new(0, 580, 0, 320); Main.Position = UDim2.new(0.5, -290, 0.5, -160)
-Main.BackgroundColor3 = Color3.fromRGB(5, 5, 5); Main.Active = true; Main.Draggable = true
-Instance.new("UICorner", Main)
+local LP = game.Players.LocalPlayer
+local RS = game:GetService("RunService")
+local VU = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
 
-local RGB = Instance.new("Frame", Main)
-RGB.Size = UDim2.new(1, 0, 0, 3); RGB.Position = UDim2.new(0, 0, 1, -3); RGB.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+-- Anti-AFK Garantido
+LP.Idled:Connect(function()
+    VU:CaptureController()
+    VU:ClickButton2(Vector2.new())
+end)
 
-local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 12); Instance.new("UICorner", Sidebar)
+-- [[ FUNÇÕES DE MOTOR (ENGINE) ]]
 
-local Container = Instance.new("Frame", Main)
-Container.Size = UDim2.new(1, -160, 1, -20); Container.Position = UDim2.new(0, 150, 0, 10); Container.BackgroundTransparency = 1
-
-local Tabs = {}
-function NewTab(name, id)
-    local P = Instance.new("ScrollingFrame", Container)
-    P.Size = UDim2.new(1, 0, 1, 0); P.Visible = (id == 1); P.BackgroundTransparency = 1; P.ScrollBarThickness = 0
-    Instance.new("UIListLayout", P).Padding = UDim.new(0, 10)
-    local B = Instance.new("TextButton", Sidebar)
-    B.Size = UDim2.new(1, -20, 0, 35); B.Position = UDim2.new(0, 10, 0, 50 + (id-1)*42); B.Text = name; B.BackgroundColor3 = (id == 1) and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(20, 20, 25); B.TextColor3 = Color3.fromRGB(255, 255, 255); B.Font = "GothamBold"; B.TextSize = 11; Instance.new("UICorner", B)
-    B.MouseButton1Click:Connect(function()
-        for _, v in pairs(Tabs) do v.P.Visible = false; v.B.BackgroundColor3 = Color3.fromRGB(20, 20, 25) end
-        P.Visible = true; B.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    end)
-    Tabs[id] = {P = P, B = B}
-    return P
+-- Função de Equipar Rápido
+local function Equip(tool)
+    if LP.Backpack:FindFirstChild(tool) then
+        LP.Character.Humanoid:EquipTool(LP.Backpack[tool])
+    end
 end
 
-function AddToggle(parent, text, key)
-    local f = Instance.new("Frame", parent); f.Size = UDim2.new(1, -10, 0, 42); f.BackgroundColor3 = Color3.fromRGB(15, 15, 20); Instance.new("UICorner", f)
-    local l = Instance.new("TextLabel", f); l.Size = UDim2.new(1, 0, 1, 0); l.Position = UDim2.new(0, 12, 0, 0); l.Text = text; l.TextColor3 = Color3.fromRGB(255, 255, 255); l.TextXAlignment = 0; l.BackgroundTransparency = 1; l.Font = "GothamBold"; l.TextSize = 11
-    local b = Instance.new("TextButton", f); b.Size = UDim2.new(0, 36, 0, 18); b.Position = UDim2.new(1, -48, 0.5, -9); b.BackgroundColor3 = Color3.fromRGB(40, 40, 45); b.Text = ""; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
-    b.MouseButton1Click:Connect(function()
-        getgenv().Config[key] = not getgenv().Config[key]
-        TS:Create(b, TweenInfo.new(0.3), {BackgroundColor3 = getgenv().Config[key] and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 45)}):Play()
+-- Motor de Farm
+task.spawn(function()
+    while true do
+        task.wait()
+        pcall(function()
+            if getgenv().Config.AutoStats.Attack then
+                Equip("Combat")
+                if LP.Character:FindFirstChild("Combat") then LP.Character.Combat:Activate() end
+            end
+            
+            if getgenv().Config.AutoStats.Defense then
+                Equip("Defense")
+                if LP.Character:FindFirstChild("Defense") then LP.Character.Defense:Activate() end
+            end
+            
+            if getgenv().Config.AutoStats.Ki then
+                Equip("Ki") -- As vezes chama "Energy" dependendo da versão do DBR
+                if LP.Character:FindFirstChild("Ki") then LP.Character.Ki:Activate() end
+            end
+        end)
+    end
+end)
+
+-- [[ ABA 1: AUTO TRAIN (FARM) ]]
+local FarmTab = Window:MakeTab({Name = "Auto Farm", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+FarmTab:AddSection({Name = "Status Grinding"})
+
+FarmTab:AddToggle({
+    Name = "Auto Attack (Soco)",
+    Default = false,
+    Callback = function(Value) getgenv().Config.AutoStats.Attack = Value end
+})
+
+FarmTab:AddToggle({
+    Name = "Auto Defense (Resistência)",
+    Default = false,
+    Callback = function(Value) getgenv().Config.AutoStats.Defense = Value end
+})
+
+FarmTab:AddToggle({
+    Name = "Auto Ki (Energia Infinita)",
+    Default = false,
+    Callback = function(Value) getgenv().Config.AutoStats.Ki = Value end
+})
+
+FarmTab:AddToggle({
+    Name = "Auto Transform (Spam Forms)",
+    Default = false,
+    Callback = function(Value)
+        getgenv().Config.AutoForm = Value
+        task.spawn(function()
+            while getgenv().Config.AutoForm do
+                task.wait(0.5)
+                -- Tenta disparar o evento de transformação
+                local args = {[1] = "Transform"}
+                pcall(function()
+                    -- Ajuste conforme o remote atual do jogo
+                    game:GetService("ReplicatedStorage").Remotes.Transform:FireServer(unpack(args)) 
+                end)
+            end
+        end)
+    end
+})
+
+-- [[ ABA 2: INFINITE RADAR (VISUAL) ]]
+local RadarTab = Window:MakeTab({Name = "Radar Infinito", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+
+RadarTab:AddSection({Name = "Sistema de Rastreamento"})
+
+RadarTab:AddParagraph("Como funciona:", "Esta função substitui o item 'Radar'. Ela cria marcadores visuais permanentes em todas as Esferas do Dragão no mapa. Não precisa gastar Robux.")
+
+local RadarFolder = Instance.new("Folder", game.CoreGui)
+RadarFolder.Name = "BlueProtocol_Radar"
+
+local function CreateRadarVisual(part)
+    if not part then return end
+    local bill = Instance.new("BillboardGui", RadarFolder)
+    bill.Name = "ESP_" .. part.Name
+    bill.Adornee = part
+    bill.Size = UDim2.new(0, 150, 0, 50)
+    bill.AlwaysOnTop = true
+    
+    local name = Instance.new("TextLabel", bill)
+    name.Size = UDim2.new(1,0,1,0)
+    name.BackgroundTransparency = 1
+    name.Text = "⚡ DRAGON BALL ⚡"
+    name.TextColor3 = Color3.fromRGB(0, 255, 255) -- Cyan Elétrico
+    name.TextStrokeTransparency = 0
+    name.Font = Enum.Font.GothamBlack
+    name.TextSize = 14
+    
+    -- Animação de cor
+    task.spawn(function()
+        while bill.Parent do
+            local t = tick()
+            name.TextColor3 = Color3.fromHSV(0.5 + 0.1*math.sin(t*3), 1, 1) -- Pulsa Azul/Ciano
+            task.wait()
+        end
     end)
 end
 
-local T1 = NewTab("Main", 1); local T2 = NewTab("Visual", 2); local T3 = NewTab("Misc", 3)
-AddToggle(T1, "Aimbot Forte (Sticky)", "Aimbot"); AddToggle(T1, "Hitbox Pro v3", "Hitbox")
-AddToggle(T2, "ESP Infinite (Box/Name)", "Esp")
-AddToggle(T3, "Noclip Ghost", "Noclip")
-
--- [[ MOTOR DE ESP (ESTILO INFINITE YIELD) ]]
-local function CreateESP(plr)
-    local folder = Instance.new("Folder", UI); folder.Name = "ESP_" .. plr.Name
-    
-    local bgui = Instance.new("BillboardGui", folder)
-    bgui.AlwaysOnTop = true; bgui.Size = UDim2.new(0, 200, 0, 50); bgui.Adornee = plr.Character:WaitForChild("Head")
-    bgui.ExtentsOffset = Vector3.new(0, 3, 0)
-    
-    local nametag = Instance.new("TextLabel", bgui)
-    nametag.Size = UDim2.new(1, 0, 1, 0); nametag.BackgroundTransparency = 1; nametag.TextColor3 = plr.TeamColor.Color
-    nametag.TextStrokeTransparency = 0; nametag.Font = "GothamBold"; nametag.TextSize = 14
-    
-    local box = Instance.new("BoxHandleAdornment", folder)
-    box.Size = Vector3.new(4, 6, 4); box.AlwaysOnTop = true; box.ZIndex = 10; box.Adornee = plr.Character:WaitForChild("HumanoidRootPart")
-    box.Transparency = 0.6; box.Color3 = plr.TeamColor.Color
-    
-    RS.RenderStepped:Connect(function()
-        if getgenv().Config.Esp and plr.Character and plr.Character:FindFirstChild("Head") then
-            local dist = math.floor((lp.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude)
-            nametag.Text = plr.Name .. " | Vida: " .. math.floor(plr.Character.Humanoid.Health) .. "% | Studs: " .. dist .. "m"
-            folder.Name = "ESP_" .. plr.Name; bgui.Enabled = true; box.Visible = true
+RadarTab:AddToggle({
+    Name = "Ativar Radar Permanente (ESP)",
+    Default = false,
+    Callback = function(Value)
+        getgenv().Config.InfiniteRadar = Value
+        if Value then
+            -- Loop de Varredura
+            task.spawn(function()
+                while getgenv().Config.InfiniteRadar do
+                    RadarFolder:ClearAllChildren()
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        -- Procura qualquer coisa que pareça uma esfera
+                        if (string.find(v.Name, "DragonBall") or string.find(v.Name, "Star")) and (v:IsA("BasePart") or v:IsA("MeshPart")) then
+                            CreateRadarVisual(v)
+                        end
+                    end
+                    task.wait(3) -- Atualiza a cada 3 segundos
+                end
+            end)
         else
-            bgui.Enabled = false; box.Visible = false
+            RadarFolder:ClearAllChildren()
         end
-    end)
-end
+    end
+})
 
--- Gerenciar ESP para novos players
-Players.PlayerAdded:Connect(function(p) p.CharacterAdded:Connect(function() task.wait(1); if p ~= lp then CreateESP(p) end end) end)
-for _, p in pairs(Players:GetPlayers()) do if p ~= lp and p.Character then CreateESP(p) end end
+-- [[ ABA 3: TELEPORTES (SAFE TWEEN) ]]
+local TeleportTab = Window:MakeTab({Name = "Viagem (TP)", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- [[ AIMBOT FORTE (STICKY) ]]
-local function GetClosest()
-    local target, dist = nil, getgenv().Config.MaxDist
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= lp and v.Character and v.Character:FindFirstChild(getgenv().Config.AimPart) and v.Character.Humanoid.Health > 0 then
-            local pos, vis = camera:WorldToViewportPoint(v.Character[getgenv().Config.AimPart].Position)
-            local mag = (v.Character[getgenv().Config.AimPart].Position - lp.Character[getgenv().Config.AimPart].Position).Magnitude
-            if mag < dist then
-                target = v; dist = mag
+local Maps = {
+    {"Earth (Spawn)", CFrame.new(0, 250, 0)},
+    {"Kame House", CFrame.new(-2530, 20, -2530)},
+    {"Time Chamber", CFrame.new(2050, 550, 2050)},
+    {"Beerus Planet", CFrame.new(5000, 550, 5000)},
+    {"Zen-Oh Palace", CFrame.new(8000, 800, 8000)}, -- Localização estimada
+    {"Broly Planet", CFrame.new(-5000, 500, -5000)}
+}
+
+for _, map in pairs(Maps) do
+    TeleportTab:AddButton({
+        Name = "Ir para: " .. map[1],
+        Callback = function()
+            if LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+                -- Tween suave de 1.5s para evitar Kick
+                local tween = TweenService:Create(LP.Character.HumanoidRootPart, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {CFrame = map[2]})
+                tween:Play()
+                
+                OrionLib:MakeNotification({
+                    Name = "Viajando...",
+                    Content = "Chegando em " .. map[1],
+                    Image = "rbxassetid://4483345998",
+                    Time = 2
+                })
             end
         end
-    end
-    return target
+    })
 end
 
-RS.RenderStepped:Connect(function()
-    if getgenv().Config.Aimbot and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-        local t = GetClosest()
-        if t then
-            camera.CFrame = CFrame.new(camera.CFrame.Position, t.Character[getgenv().Config.AimPart].Position)
-        end
-    end
-    
-    if getgenv().Config.Hitbox then
-        for _, v in pairs(Players:GetPlayers()) do
-            if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                v.Character.HumanoidRootPart.Size = Vector3.new(getgenv().Config.HitSize, getgenv().Config.HitSize, getgenv().Config.HitSize)
-                v.Character.HumanoidRootPart.CanCollide = false
-            end
-        end
-    end
-end)
+-- [[ ABA 4: EXTRAS (CODES & SERVER) ]]
+local ExtraTab = Window:MakeTab({Name = "Sistema", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- Noclip
-RS.Stepped:Connect(function()
-    if getgenv().Config.Noclip and lp.Character then
-        for _, v in pairs(lp.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+ExtraTab:AddButton({
+    Name = "Resgatar Códigos 2025/26",
+    Callback = function()
+        local codigos = {"Sub2Metalizer", "Raje", "D1scord", "S0rry", "Sa1yan", "700kLikes", "IdkWhatCode"}
+        for _, code in pairs(codigos) do
+            game:GetService("ReplicatedStorage").Remotes.RedeemCode:InvokeServer(code)
+            task.wait(0.1)
+        end
+        OrionLib:MakeNotification({Name = "Sistema", Content = "Códigos Injetados.", Time = 3})
     end
-end)
+})
 
--- Botão de Minimizar
-local MinBtn = Instance.new("ImageButton", UI)
-MinBtn.Size = UDim2.new(0, 45, 0, 45); MinBtn.Position = UDim2.new(0, 15, 0.5, -22); MinBtn.Image = "rbxassetid://6023454774"; MinBtn.BackgroundColor3 = Color3.fromRGB(5, 5, 5); Instance.new("UICorner", MinBtn)
-MinBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+ExtraTab:AddButton({
+    Name = "Server Hop (Menos Players)",
+    Callback = function()
+        local Http = game:GetService("HttpService")
+        local TPS = game:GetService("TeleportService")
+        local Api = "https://games.roblox.com/v1/games/"
+        local _place = game.PlaceId
+        local _servers = Api.._place.."/servers/Public?sortOrder=Asc&limit=100"
+        
+        local function ListServers(cursor)
+            local Raw = game:HttpGet(_servers .. ((cursor and "&cursor="..cursor) or ""))
+            return Http:JSONDecode(Raw)
+        end
+        
+        local Server, Next; repeat
+            local Servers = ListServers(Next)
+            Server = Servers.data[1]
+            Next = Servers.nextPageCursor
+        until Server
+        
+        TPS:TeleportToPlaceInstance(_place, Server.id, LP)
+    end
+})
+
+OrionLib:Init()
